@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: gaiaexport-app
+    container_name: gaiaexport-app
+    restart: unless-stopped
+    working_dir: /var/www
+    ports:
+      - "9000:9000" # Exposed to allow manual proxy to connect via fastcgi
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - db
+    networks:
+      - gaia-network
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=gaiaexport
+      - DB_USERNAME=gaiauser
+      - DB_PASSWORD=gaiapass
+
+  db:
+    image: postgres:15-alpine
+    container_name: gaiaexport-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gaiaexport
+      POSTGRES_USER: gaiauser
+      POSTGRES_PASSWORD: gaiapass
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - gaia-network
+
+networks:
+  gaia-network:
+    driver: bridge
+
+volumes:
+  db-data:
