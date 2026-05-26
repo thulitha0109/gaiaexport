@@ -10,11 +10,12 @@ services:
     restart: unless-stopped
     working_dir: /var/www
     ports:
-      - "9000:9000" # Exposed to allow manual proxy to connect via fastcgi
+      - "9000:9000" # Exposed to allow manual proxy to connect via fastcgi from host Nginx
     volumes:
       - ./:/var/www
     depends_on:
       - db
+      - redis
     networks:
       - gaia-network
     environment:
@@ -24,6 +25,61 @@ services:
       - DB_DATABASE=gaiaexport
       - DB_USERNAME=gaiauser
       - DB_PASSWORD=gaiapass
+      - CACHE_STORE=redis
+      - QUEUE_CONNECTION=redis
+      - SESSION_DRIVER=redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  worker:
+    image: gaiaexport-app
+    container_name: gaiaexport-worker
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan queue:work redis --sleep=3 --tries=3
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - app
+    networks:
+      - gaia-network
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=gaiaexport
+      - DB_USERNAME=gaiauser
+      - DB_PASSWORD=gaiapass
+      - CACHE_STORE=redis
+      - QUEUE_CONNECTION=redis
+      - SESSION_DRIVER=redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  scheduler:
+    image: gaiaexport-app
+    container_name: gaiaexport-scheduler
+    restart: unless-stopped
+    working_dir: /var/www
+    command: php artisan schedule:work
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - app
+    networks:
+      - gaia-network
+    environment:
+      - DB_CONNECTION=pgsql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_DATABASE=gaiaexport
+      - DB_USERNAME=gaiauser
+      - DB_PASSWORD=gaiapass
+      - CACHE_STORE=redis
+      - QUEUE_CONNECTION=redis
+      - SESSION_DRIVER=redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
 
   db:
     image: postgres:15-alpine
@@ -40,9 +96,21 @@ services:
     networks:
       - gaia-network
 
+  redis:
+    image: redis:alpine
+    container_name: gaiaexport-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - gaia-network
+
 networks:
   gaia-network:
     driver: bridge
 
 volumes:
   db-data:
+  redis-data:
