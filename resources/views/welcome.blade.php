@@ -98,8 +98,7 @@
             </h1>
             
             <p class="mt-6 text-lg md:text-xl text-slate-300/90 max-w-2xl mx-auto leading-relaxed font-light">
-                We are building something extraordinary. A new standard for global trade and export solutions. 
-                Prepare for a seamless, transparent, and revolutionary platform.
+                We are building something extraordinary
             </p>
 
             <!-- Subscribe Action -->
