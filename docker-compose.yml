@@ -32,6 +32,9 @@ services:
       - REDIS_PORT=6379
 
   worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: gaiaexport-app
     container_name: gaiaexport-worker
     restart: unless-stopped
@@ -57,6 +60,9 @@ services:
       - REDIS_PORT=6379
 
   scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: gaiaexport-app
     container_name: gaiaexport-scheduler
     restart: unless-stopped
